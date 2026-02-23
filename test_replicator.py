@@ -1,24 +1,14 @@
 """
-PRAQTOR DATΔ — Synthetic Data Generator (Fixed)
-================================================
+PRAQTOR DATΔ — Synthetic Data Generator v3
+===========================================
 Isaac Sim 4.2.0 | Headless | RunPod RTX 4090
 Run: ./python.sh /workspace/test_replicator.py
 Output: /workspace/output/
 
-Fixes applied (synthesized from 6 LLM analyses):
-  1. RayTracedLighting renderer mode (fastest, most reliable in headless)
-  2. 25-frame warm-up AFTER scene build (renderer needs BVH/shader init)
-  3. Dome Light + Distant Light combo (headless has NO default lights)
-  4. Explicit OmniPBR materials on all objects (don't rely on defaults)
-  5. Close camera with wide FOV (objects fill frame)
-  6. max_execs instead of deprecated num_frames
-  7. rt_subframes for render convergence per capture
-  8. 3-frame sanity test first, then full 10
+v3 fixes: Removed OmniPBR material binding (broke Replicator graph in v2).
+Using primvars:displayColor for object visibility instead.
 """
 
-# ============================================================
-# STEP 1: SimulationApp MUST be created before any omni imports
-# ============================================================
 from isaacsim import SimulationApp
 
 simulation_app = SimulationApp({
@@ -30,9 +20,6 @@ simulation_app = SimulationApp({
 
 print("[PRAQTOR DATΔ] SimulationApp launched.")
 
-# ============================================================
-# STEP 2: Imports (only after SimulationApp exists)
-# ============================================================
 import os
 import omni.replicator.core as rep
 
@@ -40,15 +27,11 @@ OUTPUT_DIR = "/workspace/output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
-# STEP 3: Build the scene
+# Build the scene — NO material binding (it breaks the graph)
 # ============================================================
 with rep.new_layer():
 
-    # ----------------------------------------------------------
-    # LIGHTING — P0 fix: headless has NO default lights
-    # Dome = ambient sky (omnidirectional fill)
-    # Distant = sun (directional shadows + depth)
-    # ----------------------------------------------------------
+    # LIGHTING — Dome + Distant (headless has NO default lights)
     dome = rep.create.light(
         light_type="Dome",
         intensity=1500,
@@ -62,81 +45,35 @@ with rep.new_layer():
         rotation=(-45, 45, 0),
     )
 
-    # ----------------------------------------------------------
-    # GROUND PLANE — dark gray asphalt
-    # ----------------------------------------------------------
+    # GROUND PLANE
     plane = rep.create.plane(
         scale=(30, 30, 1),
         position=(0, 0, 0),
         semantics=[("class", "road")],
     )
 
-    road_mat = rep.create.material_omnipbr(
-        diffuse=(0.15, 0.15, 0.15),
-        roughness=0.9,
-        metallic=0.0,
-    )
-
-    # ----------------------------------------------------------
-    # VEHICLE — blue cube, elongated
-    # ----------------------------------------------------------
+    # VEHICLE 1 — blue cube
     vehicle = rep.create.cube(
         position=(0, 0, 0.6),
         scale=(1.6, 0.9, 0.6),
         semantics=[("class", "vehicle")],
     )
 
-    car_mat = rep.create.material_omnipbr(
-        diffuse=(0.1, 0.35, 0.9),
-        roughness=0.35,
-        metallic=0.05,
-    )
-
-    # ----------------------------------------------------------
-    # PEDESTRIAN — red/orange sphere
-    # ----------------------------------------------------------
+    # PEDESTRIAN — orange sphere
     pedestrian = rep.create.sphere(
         position=(1.5, 0.5, 0.5),
         scale=(0.35, 0.35, 1.0),
         semantics=[("class", "pedestrian")],
     )
 
-    ped_mat = rep.create.material_omnipbr(
-        diffuse=(0.9, 0.2, 0.15),
-        roughness=0.6,
-        metallic=0.0,
-    )
-
-    # ----------------------------------------------------------
-    # SECOND VEHICLE — green cube for variety
-    # ----------------------------------------------------------
+    # VEHICLE 2 — green cube
     vehicle2 = rep.create.cube(
         position=(-2, 1, 0.6),
         scale=(1.4, 0.8, 0.55),
         semantics=[("class", "vehicle")],
     )
 
-    car2_mat = rep.create.material_omnipbr(
-        diffuse=(0.15, 0.65, 0.2),
-        roughness=0.4,
-        metallic=0.05,
-    )
-
-    # ----------------------------------------------------------
-    # Apply materials to objects
-    # ----------------------------------------------------------
-    with plane:
-        rep.modify.attribute("material:binding", road_mat)
-    with vehicle:
-        rep.modify.attribute("material:binding", car_mat)
-    with pedestrian:
-        rep.modify.attribute("material:binding", ped_mat)
-    with vehicle2:
-        rep.modify.attribute("material:binding", car2_mat)
-
-    # ----------------------------------------------------------
-    # CAMERA — close, wide angle, looking at scene center
-    # ----------------------------------------------------------
+    # CAMERA — close, wide angle
     camera = rep.create.camera(
         position=(6.0, -6.0, 3.5),
         look_at=(0, 0, 0.5),
@@ -146,9 +83,7 @@ with rep.new_layer():
 
     render_product = rep.create.render_product(camera, (1024, 1024))
 
-    # ----------------------------------------------------------
     # WRITER — RGB + bounding boxes + segmentation
-    # ----------------------------------------------------------
     writer = rep.WriterRegistry.get("BasicWriter")
     writer.initialize(
         output_dir=OUTPUT_DIR,
@@ -158,9 +93,7 @@ with rep.new_layer():
     )
     writer.attach([render_product])
 
-    # ----------------------------------------------------------
-    # RANDOMIZATION — objects stay in tight area near camera
-    # ----------------------------------------------------------
+    # RANDOMIZATION
     with rep.trigger.on_frame(max_execs=10):
         with vehicle:
             rep.modify.pose(
@@ -180,9 +113,7 @@ with rep.new_layer():
             rep.modify.attribute("intensity", rep.distribution.uniform(3000, 7000))
 
 # ============================================================
-# STEP 4: WARM-UP — P0 fix: renderer needs frames to initialize
-# BVH structures, shader compilation, texture streaming
-# Must happen AFTER scene is built, BEFORE capture
+# WARM-UP — 25 frames for renderer initialization
 # ============================================================
 print("[PRAQTOR DATΔ] Warming up renderer (25 frames)...")
 for i in range(25):
@@ -190,13 +121,10 @@ for i in range(25):
 print("[PRAQTOR DATΔ] Warm-up complete. Starting capture...")
 
 # ============================================================
-# STEP 5: Run orchestrator — blocks until all frames captured
+# RUN
 # ============================================================
 rep.orchestrator.run_until_complete()
 
 print(f"[PRAQTOR DATΔ] Capture complete! Output: {OUTPUT_DIR}")
 
-# ============================================================
-# STEP 6: Clean shutdown
-# ============================================================
 simulation_app.close()
