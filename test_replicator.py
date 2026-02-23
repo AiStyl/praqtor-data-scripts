@@ -15,4 +15,4 @@ with rep.new_layer():
             rep.modify.pose(position=rep.distribution.uniform((-200,0,-200),(200,100,200)))
         with sphere:
             rep.modify.pose(position=rep.distribution.uniform((-200,0,-200),(200,100,200)))
-rep.orchestrator.run()
+rep.orchestrator.run_until_complete()
