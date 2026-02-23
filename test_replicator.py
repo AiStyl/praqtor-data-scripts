@@ -1,3 +1,6 @@
+from isaacsim import SimulationApp
+simulation_app = SimulationApp({"headless": True})
+
 import omni.replicator.core as rep
 
 with rep.new_layer():
@@ -16,3 +19,5 @@ with rep.new_layer():
         with sphere:
             rep.modify.pose(position=rep.distribution.uniform((-200,0,-200),(200,100,200)))
 rep.orchestrator.run_until_complete()
+
+simulation_app.close()
