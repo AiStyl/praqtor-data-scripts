@@ -1,213 +1,167 @@
 """
-PRAQTOR DATΔ — Black Image Diagnostic (v8)
-==========================================
+PRAQTOR DATΔ — Production Script v9
+=====================================
 Isaac Sim 4.2.0 | Headless | RTX 4090 | RunPod
-Run: /isaac-sim/python.sh test_replicator.py
+Target: 5+/10 image quality - proper camera, bright lighting, objects in frame
 
-Runs 4 tests to isolate root cause of black images:
-  Test 1: Pure Replicator primitives (no USD environment) - baseline
-  Test 2: open_stage() + rep.create.camera() with look_at
-  Test 3: open_stage() + USD API camera (no look_at)
-  Test 4: rep.create.from_usd() inside rep.new_layer() (old broken approach)
+Key changes from diagnostic:
+- Camera elevated and angled DOWN (bird's eye / inspection angle)
+- PathTracing renderer for better light quality
+- High intensity lights positioned above scene
+- Pallets and boxes placed directly in camera view
+- rt_subframes=32 for cleaner render
 """
 
 from isaacsim import SimulationApp
 
 simulation_app = SimulationApp({
     "headless": True,
-    "renderer": "RayTracedLighting",
+    "renderer": "PathTracing",
     "width": 1024,
     "height": 1024,
 })
 
 import os
-import numpy as np
 import omni.usd
 import omni.replicator.core as rep
 import carb
 from pxr import UsdGeom, UsdLux, Gf, Sdf
 
-WAREHOUSE_USD = "/workspace/nvidia_assets/Assets/ArchVis/Industrial/Stages/IsaacWarehouse.usd"
+print("[PRAQTOR DATΔ v9] Starting...")
 
-def warm_up(n=25, label=""):
-    print(f"  Warm-up {n} frames {label}...")
-    for _ in range(n):
-        simulation_app.update()
+carb.settings.get_settings().set("/app/asyncRendering", False)
+carb.settings.get_settings().set("/rtx/pathtracing/spp", 64)
 
-def reset_stage():
-    omni.usd.get_context().new_stage()
-    warm_up(10, "reset")
+OUTPUT_DIR = "/workspace/output"
+NUM_FRAMES = 10
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def analyze(output_dir, test_name):
-    from PIL import Image
-    rgb_dir = os.path.join(output_dir, "rgb")
-    if not os.path.exists(rgb_dir):
-        # BasicWriter may write directly without rgb/ subfolder
-        rgb_dir = output_dir
-    found = False
-    for fname in sorted(os.listdir(rgb_dir)):
-        if fname.endswith(".png") and "rgb" in fname:
-            img = np.array(Image.open(os.path.join(rgb_dir, fname)))
-            r = img[:,:,0].mean()
-            g = img[:,:,1].mean()
-            b = img[:,:,2].mean()
-            a = img[:,:,3].mean() if img.shape[2] == 4 else 255
-            status = "BLACK" if (r==0 and g==0 and b==0) else "VISIBLE"
-            print(f"  [{test_name}] {fname}: R={r:.1f} G={g:.1f} B={b:.1f} A={a:.1f} -> {status}")
-            found = True
-            return status == "VISIBLE"
-    if not found:
-        print(f"  [{test_name}] No rgb PNG files found in {rgb_dir}")
-    return False
+ASSETS = "/workspace/nvidia_assets/Assets/ArchVis/Industrial"
+WAREHOUSE_USD = f"{ASSETS}/Stages/IsaacWarehouse.usd"
+PALLET_A_USD  = f"{ASSETS}/Pallets/Pallet_A1.usd"
+PALLET_B_USD  = f"{ASSETS}/Pallets/Pallet_B1.usd"
+CARDBOX_A_USD = f"{ASSETS}/Containers/Cardboard/Cardbox_A1.usd"
+CARDBOX_B_USD = f"{ASSETS}/Containers/Cardboard/Cardbox_B1.usd"
 
-# Install Pillow
-try:
-    from PIL import Image
-except ImportError:
-    import subprocess
-    subprocess.check_call(["/isaac-sim/python.sh", "-m", "pip", "install", "Pillow", "-q"])
-    from PIL import Image
+# Phase 1: Renderer pre-warm
+print("[PRAQTOR DATΔ v9] Phase 1: Renderer pre-warm (20 frames)...")
+for _ in range(20):
+    simulation_app.update()
 
-print("\n[PRAQTOR DATΔ] Initial warm-up...")
-warm_up(20, "renderer init")
-
-# ============================================================
-# TEST 1: Pure Replicator primitives — baseline
-# ============================================================
-print("\n" + "="*60)
-print("TEST 1: Pure Replicator primitives (baseline)")
-print("="*60)
-reset_stage()
-os.makedirs("/workspace/output_test1", exist_ok=True)
-
-with rep.new_layer():
-    rep.create.light(light_type="Dome", rotation=(270,0,0), intensity=2000)
-    rep.create.light(light_type="Distant", rotation=(-45,30,0), intensity=3000)
-    plane = rep.create.plane(scale=10, position=(0,0,0))
-    cube = rep.create.cube(position=(0,0,50), scale=1)
-    sphere = rep.create.sphere(position=(100,0,30), scale=0.5)
-    cam = rep.create.camera(position=(250,250,200), look_at=(0,0,25), focal_length=24)
-    rp = rep.create.render_product(cam, (1024,1024))
-    writer = rep.WriterRegistry.get("BasicWriter")
-    writer.initialize(output_dir="/workspace/output_test1", rgb=True)
-    writer.attach([rp])
-    rep.trigger.on_frame(max_execs=3)
-
-warm_up(30, "test1 settle")
-rep.orchestrator.run_until_complete()
-test1 = analyze("/workspace/output_test1", "TEST 1")
-
-# ============================================================
-# TEST 2: open_stage() + rep.create.camera() with look_at
-# ============================================================
-print("\n" + "="*60)
-print("TEST 2: open_stage() + rep.create.camera(look_at=...)")
-print("="*60)
-os.makedirs("/workspace/output_test2", exist_ok=True)
-
-print(f"  Loading: {WAREHOUSE_USD}")
+# Phase 2: Load warehouse as ROOT stage via open_stage
+print(f"[PRAQTOR DATΔ v9] Phase 2: Loading warehouse via open_stage()...")
 omni.usd.get_context().open_stage(WAREHOUSE_USD)
-warm_up(50, "stage load")
-
-with rep.new_layer():
-    rep.create.light(light_type="Dome", rotation=(270,0,0), intensity=2000)
-    rep.create.light(light_type="Distant", rotation=(-45,30,0), intensity=3000)
-    cam2 = rep.create.camera(position=(8,-6,4), look_at=(0,1,0), focal_length=24)
-    rp2 = rep.create.render_product(cam2, (1024,1024))
-    writer2 = rep.WriterRegistry.get("BasicWriter")
-    writer2.initialize(output_dir="/workspace/output_test2", rgb=True)
-    writer2.attach([rp2])
-    rep.trigger.on_frame(max_execs=3)
-
-warm_up(30, "test2 settle")
-rep.orchestrator.run_until_complete()
-test2 = analyze("/workspace/output_test2", "TEST 2")
-
-# ============================================================
-# TEST 3: open_stage() + USD API camera (no look_at)
-# ============================================================
-print("\n" + "="*60)
-print("TEST 3: open_stage() + USD API camera (no rep.create.camera)")
-print("="*60)
-os.makedirs("/workspace/output_test3", exist_ok=True)
-
-omni.usd.get_context().open_stage(WAREHOUSE_USD)
-warm_up(50, "stage load")
+print("[PRAQTOR DATΔ v9] Waiting for stage to fully load (60 frames)...")
+for i in range(60):
+    simulation_app.update()
+    if i % 20 == 0:
+        print(f"  {i}/60...")
 
 stage = omni.usd.get_context().get_stage()
+print(f"[PRAQTOR DATΔ v9] Stage loaded. Root prims: {[p.GetName() for p in stage.GetPseudoRoot().GetChildren()]}")
 
-dome = stage.DefinePrim("/World/DiagDome", "DomeLight")
-dome.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(2000.0)
+# Phase 3: Strong lights via USD API on main stage
+print("[PRAQTOR DATΔ v9] Phase 3: Adding lights...")
 
-sun = stage.DefinePrim("/World/DiagSun", "DistantLight")
-sun.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(3000.0)
-sun.CreateAttribute("inputs:angle", Sdf.ValueTypeNames.Float).Set(1.0)
-UsdGeom.Xformable(sun).AddRotateXYZOp().Set(Gf.Vec3f(-45, 30, 0))
+# Dome light - bright ambient
+dome = stage.DefinePrim("/World/SDG_Dome", "DomeLight")
+dome.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(4000.0)
+dome.CreateAttribute("inputs:color", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 0.98, 0.95))
 
-cam3_prim = stage.DefinePrim("/World/DiagCamera", "Camera")
-cam3_xform = UsdGeom.Xformable(cam3_prim)
-cam3_xform.AddTranslateOp().Set(Gf.Vec3d(8.0, -6.0, 4.0))
-cam3_xform.AddRotateXYZOp().Set(Gf.Vec3f(-21, 0, -49))
-cam3_prim.CreateAttribute("focalLength", Sdf.ValueTypeNames.Float).Set(24.0)
-cam3_prim.CreateAttribute("clippingRange", Sdf.ValueTypeNames.Float2).Set(Gf.Vec2f(0.1, 10000.0))
+# Rect light directly above scene - key light
+rect = stage.DefinePrim("/World/SDG_Rect", "RectLight")
+rect.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(80000.0)
+rect.CreateAttribute("inputs:width", Sdf.ValueTypeNames.Float).Set(15.0)
+rect.CreateAttribute("inputs:height", Sdf.ValueTypeNames.Float).Set(15.0)
+rect.CreateAttribute("inputs:color", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 0.97, 0.9))
+rect_xform = UsdGeom.Xformable(rect)
+rect_xform.AddTranslateOp().Set(Gf.Vec3d(0.0, 0.0, 12.0))
+rect_xform.AddRotateXYZOp().Set(Gf.Vec3f(-90.0, 0.0, 0.0))
 
-warm_up(10, "USD prims")
+# Second fill rect light from the side
+rect2 = stage.DefinePrim("/World/SDG_Rect2", "RectLight")
+rect2.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(40000.0)
+rect2.CreateAttribute("inputs:width", Sdf.ValueTypeNames.Float).Set(10.0)
+rect2.CreateAttribute("inputs:height", Sdf.ValueTypeNames.Float).Set(10.0)
+rect2_xform = UsdGeom.Xformable(rect2)
+rect2_xform.AddTranslateOp().Set(Gf.Vec3d(8.0, 0.0, 8.0))
+rect2_xform.AddRotateXYZOp().Set(Gf.Vec3f(-45.0, 0.0, 0.0))
 
-with rep.new_layer():
-    rp3 = rep.create.render_product("/World/DiagCamera", (1024,1024))
-    writer3 = rep.WriterRegistry.get("BasicWriter")
-    writer3.initialize(output_dir="/workspace/output_test3", rgb=True)
-    writer3.attach([rp3])
-    rep.trigger.on_frame(max_execs=3)
+for _ in range(10):
+    simulation_app.update()
+print("[PRAQTOR DATΔ v9] Lights added.")
 
-warm_up(30, "test3 settle")
-rep.orchestrator.run_until_complete()
-test3 = analyze("/workspace/output_test3", "TEST 3")
-
-# ============================================================
-# TEST 4: rep.create.from_usd() in rep.new_layer() — old approach
-# ============================================================
-print("\n" + "="*60)
-print("TEST 4: rep.create.from_usd() inside rep.new_layer() (old approach)")
-print("="*60)
-os.makedirs("/workspace/output_test4", exist_ok=True)
-reset_stage()
+# Phase 4: Replicator layer - objects + camera + writer
+print("[PRAQTOR DATΔ v9] Phase 4: Setting up Replicator...")
 
 with rep.new_layer():
-    rep.create.from_usd(WAREHOUSE_USD)
-    rep.create.light(light_type="Dome", rotation=(270,0,0), intensity=3000)
-    rep.create.light(light_type="Distant", rotation=(-45,30,0), intensity=5000)
-    cam4 = rep.create.camera(position=(8,-6,4), look_at=(0,1,0), focal_length=24)
-    rp4 = rep.create.render_product(cam4, (1024,1024))
-    writer4 = rep.WriterRegistry.get("BasicWriter")
-    writer4.initialize(output_dir="/workspace/output_test4", rgb=True)
-    writer4.attach([rp4])
-    rep.trigger.on_frame(max_execs=3)
 
-warm_up(50, "test4 settle")
-rep.orchestrator.run_until_complete()
-test4 = analyze("/workspace/output_test4", "TEST 4")
+    # Place pallets in camera view (around origin, spread out)
+    pallet_positions = [(0, 0, 0), (2.5, 1.5, 0), (-2.0, 2.0, 0), (1.0, -1.5, 0)]
+    pallets = []
+    for i, pos in enumerate(pallet_positions):
+        usd = PALLET_A_USD if i % 2 == 0 else PALLET_B_USD
+        p = rep.create.from_usd(usd, semantics=[("class", "pallet")])
+        with p:
+            rep.modify.pose(position=pos, rotation=(0, 0, 0))
+        pallets.append(p)
 
-# ============================================================
-# VERDICT
-# ============================================================
-print("\n" + "="*60)
-print("DIAGNOSTIC VERDICT")
-print("="*60)
-print(f"  Test 1 (pure primitives):          {'VISIBLE' if test1 else 'BLACK'}")
-print(f"  Test 2 (open_stage + rep camera):  {'VISIBLE' if test2 else 'BLACK'}")
-print(f"  Test 3 (open_stage + USD camera):  {'VISIBLE' if test3 else 'BLACK'}")
-print(f"  Test 4 (from_usd in new_layer):    {'VISIBLE' if test4 else 'BLACK'}")
+    # Stack boxes on top of pallets
+    box_positions = [(0, 0, 0.2), (2.5, 1.5, 0.2), (-2.0, 2.0, 0.2)]
+    boxes = []
+    for i, pos in enumerate(box_positions):
+        usd = CARDBOX_A_USD if i % 2 == 0 else CARDBOX_B_USD
+        b = rep.create.from_usd(usd, semantics=[("class", "box")])
+        with b:
+            rep.modify.pose(position=pos)
+        boxes.append(b)
 
-if not test1:
-    print("\nDIAGNOSIS: Renderer itself is broken - GPU/driver issue")
-elif test1 and (test2 or test3) and not test4:
-    print("\nDIAGNOSIS: rep.create.from_usd() for environments is the problem")
-    print("FIX: Use open_stage() to load the warehouse")
-elif test1 and not test2 and test3:
-    print("\nDIAGNOSIS: rep.create.camera(look_at=) is broken - use USD API camera")
-elif test1 and not any([test2, test3, test4]):
-    print("\nDIAGNOSIS: IsaacWarehouse.usd itself has issues in headless mode")
+    # Camera: elevated, angled DOWN at 45 degrees, looking at scene center
+    # Position: (7, -7, 9) gives good bird's-eye perspective angle
+    camera = rep.create.camera(
+        position=(7.0, -7.0, 9.0),
+        look_at=(0.0, 1.0, 0.0),
+        focal_length=35.0,
+        clipping_range=(0.1, 1000.0),
+    )
+    render_product = rep.create.render_product(camera, (1024, 1024))
 
+    writer = rep.WriterRegistry.get("BasicWriter")
+    writer.initialize(
+        output_dir=OUTPUT_DIR,
+        rgb=True,
+        bounding_box_2d_tight=True,
+        semantic_segmentation=True,
+        colorize_semantic_segmentation=True,
+    )
+    writer.attach([render_product])
+
+    with rep.trigger.on_frame(max_execs=NUM_FRAMES):
+        for p in pallets:
+            with p:
+                rep.modify.pose(
+                    position=rep.distribution.uniform((-4, -3, 0), (4, 4, 0)),
+                    rotation=rep.distribution.uniform((0, 0, -90), (0, 0, 90)),
+                )
+        for b in boxes:
+            with b:
+                rep.modify.pose(
+                    position=rep.distribution.uniform((-3, -2, 0.18), (3, 3, 0.18)),
+                )
+
+# Phase 5: Final warm-up with everything wired up
+print("[PRAQTOR DATΔ v9] Phase 5: Final warm-up (40 frames)...")
+for i in range(40):
+    simulation_app.update()
+    if i % 10 == 0:
+        print(f"  {i}/40...")
+
+# Phase 6: Capture with high rt_subframes
+print(f"[PRAQTOR DATΔ v9] Phase 6: Capturing {NUM_FRAMES} frames (rt_subframes=32)...")
+for i in range(NUM_FRAMES):
+    rep.orchestrator.step(delta_time=0.0, rt_subframes=32)
+    print(f"  Frame {i+1}/{NUM_FRAMES} captured")
+
+rep.orchestrator.wait_until_complete()
+print(f"[PRAQTOR DATΔ v9] Done! Output: {OUTPUT_DIR}")
 simulation_app.close()
-print("\n[PRAQTOR DATΔ] Diagnostic complete.")
