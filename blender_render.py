@@ -219,7 +219,8 @@ def setup_lighting():
         light.rotation_euler = (0, 0, 0)
 
     # Sky/ambient via world HDRI simulation
-    world = bpy.context.scene.world
+    world = bpy.data.worlds.new("World")
+    bpy.context.scene.world = world
     world.use_nodes = True
     bg = world.node_tree.nodes['Background']
     bg.inputs['Color'].default_value = (0.05, 0.07, 0.12, 1.0)
