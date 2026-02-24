@@ -116,12 +116,13 @@ with rep.new_layer():
             rep.modify.pose(position=pos)
         boxes.append(b)
 
-    # Camera: elevated, angled DOWN at 45 degrees, looking at scene center
-    # Position: (7, -7, 9) gives good bird's-eye perspective angle
+    # Camera: high up, angled down 45 degrees — inspection/surveillance angle
+    # Warehouse floor at Z=0, objects placed around origin
+    # Position at (10, -10, 12) looking at (0, 2, 0) = ~45 deg down angle
     camera = rep.create.camera(
-        position=(7.0, -7.0, 9.0),
-        look_at=(0.0, 1.0, 0.0),
-        focal_length=35.0,
+        position=(10.0, -10.0, 12.0),
+        look_at=(0.0, 2.0, 0.0),
+        focal_length=28.0,
         clipping_range=(0.1, 1000.0),
     )
     render_product = rep.create.render_product(camera, (1024, 1024))
