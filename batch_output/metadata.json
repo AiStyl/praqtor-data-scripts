@@ -1,0 +1,9 @@
+{
+  "generated": "2026-02-25T17:57:38.646386",
+  "pipeline": "ControlNet Canny + SD v1.5",
+  "input_image": "pexels warehouse photo",
+  "scenarios": 5,
+  "gpu": "RTX 4090",
+  "inference_steps": 25,
+  "guidance_scale": 8.0
+}

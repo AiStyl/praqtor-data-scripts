@@ -1,0 +1,128 @@
+{
+  "info": {
+    "description": "PRAQTOR DATA Synthetic Warehouse Safety Dataset",
+    "version": "1.0",
+    "date_created": "2026-02-25T17:57:31.882513"
+  },
+  "images": [
+    {
+      "id": 1,
+      "file_name": "scenario_01_near_miss.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Near Miss \u2014 Forklift + Worker"
+    },
+    {
+      "id": 2,
+      "file_name": "scenario_02_pedestrian_crossing.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Pedestrian Crossing Active Lane"
+    },
+    {
+      "id": 3,
+      "file_name": "scenario_03_robot_human.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Robot + Human Mixed Operations"
+    },
+    {
+      "id": 4,
+      "file_name": "scenario_04_night_shift.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Night Shift Low Visibility"
+    },
+    {
+      "id": 5,
+      "file_name": "scenario_05_normal_operations.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Normal Operations \u2014 Baseline"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        86,
+        0,
+        426,
+        512
+      ],
+      "area": 218112,
+      "iscrowd": 0
+    },
+    {
+      "id": 2,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        0,
+        4,
+        512,
+        508
+      ],
+      "area": 260096,
+      "iscrowd": 0
+    },
+    {
+      "id": 3,
+      "image_id": 3,
+      "category_id": 3,
+      "bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "area": 262144,
+      "iscrowd": 0
+    },
+    {
+      "id": 4,
+      "image_id": 4,
+      "category_id": 1,
+      "bbox": [
+        241,
+        98,
+        271,
+        414
+      ],
+      "area": 112194,
+      "iscrowd": 0
+    },
+    {
+      "id": 5,
+      "image_id": 5,
+      "category_id": 1,
+      "bbox": [
+        0,
+        0,
+        275,
+        512
+      ],
+      "area": 140800,
+      "iscrowd": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "forklift",
+      "supercategory": "vehicle"
+    },
+    {
+      "id": 2,
+      "name": "worker",
+      "supercategory": "person"
+    },
+    {
+      "id": 3,
+      "name": "robot",
+      "supercategory": "vehicle"
+    }
+  ]
+}
