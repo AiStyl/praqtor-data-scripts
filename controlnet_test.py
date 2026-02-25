@@ -10,7 +10,7 @@ import os
 os.makedirs("/workspace/outputs", exist_ok=True)
 
 print("Downloading warehouse image...")
-url = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Warehouse_with_pallets.jpg/1280px-Warehouse_with_pallets.jpg"
+url = "https://images.pexels.com/photos/1267338/pexels-photo-1267338.jpeg"
 response = requests.get(url)
 img = Image.open(BytesIO(response.content)).convert("RGB").resize((512, 512))
 img.save("/workspace/outputs/input_warehouse.png")
