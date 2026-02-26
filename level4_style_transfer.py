@@ -35,11 +35,12 @@ import glob
 import shutil
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
-OUTPUT_DIR = "/root/outputs/level4"
-TEMPLATES_DIR = "/root/outputs/level4/templates"
-STYLED_DIR = "/root/outputs/level4/styled"
-VISUALIZED_DIR = "/root/outputs/level4/visualized"
-ANNOTATIONS_DIR = "/root/outputs/level4/annotations"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, "level4_output")
+TEMPLATES_DIR = os.path.join(OUTPUT_DIR, "templates")
+STYLED_DIR = os.path.join(OUTPUT_DIR, "styled")
+VISUALIZED_DIR = os.path.join(OUTPUT_DIR, "visualized")
+ANNOTATIONS_DIR = os.path.join(OUTPUT_DIR, "annotations")
 
 for d in [OUTPUT_DIR, TEMPLATES_DIR, STYLED_DIR, VISUALIZED_DIR, ANNOTATIONS_DIR]:
     os.makedirs(d, exist_ok=True)
@@ -130,7 +131,7 @@ print("STEP 3: Extracting customer warehouse style fingerprint")
 print("=" * 60)
 
 # Use the existing customer warehouse photo
-customer_photo_path = "/workspace/outputs/input_warehouse.png"
+customer_photo_path = os.path.join(BASE_DIR, "input_warehouse.png")
 if not os.path.exists(customer_photo_path):
     # Fall back to first template as "customer photo" for testing
     customer_photo_path = template_paths[0] if template_paths else None
