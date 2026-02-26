@@ -150,64 +150,73 @@ except Exception as e:
 # ─── LOAD PIPELINE ───────────────────────────────────────────────────────────
 print("\nLoading SDXL pipeline...")
 
-if USE_DEPTH:
+USE_DEPTH = False  # Skip depth — focus on getting SDXL working first
+USE_IP_ADAPTER = False
+
+# Find the local snapshot path directly — bypass HF cache metadata writes
+import glob
+
+def find_snapshot(model_name, base="/workspace/models"):
+    pattern = f"{base}/models--{model_name.replace('/', '--')}/snapshots/*/unet"
+    matches = glob.glob(pattern)
+    if matches:
+        return os.path.dirname(matches[0])
+    return None
+
+# Try loading SDXL from local snapshot directly
+sdxl_local = find_snapshot("diffusers/stable-diffusion-xl-1.0-inpainting-0.1")
+vae_local = find_snapshot("madebyollin/sdxl-vae-fp16-fix")
+
+print(f"SDXL local path: {sdxl_local}")
+print(f"VAE local path: {vae_local}")
+
+if sdxl_local:
+    print("Loading SDXL from local snapshot (no HF metadata writes)...")
     try:
-        print("Attempting SDXL + ControlNet Depth pipeline...")
-        controlnet = ControlNetModel.from_pretrained(
-            "diffusers/controlnet-depth-sdxl-1.0",
-            torch_dtype=torch.float16,
-            cache_dir="/workspace/models"
-        )
-        vae = AutoencoderKL.from_pretrained(
-            "madebyollin/sdxl-vae-fp16-fix",
-            torch_dtype=torch.float16,
-            cache_dir="/workspace/models"
-        )
-        pipe = StableDiffusionXLControlNetInpaintPipeline.from_pretrained(
-            "diffusers/stable-diffusion-xl-1.0-inpainting-0.1",
-            controlnet=controlnet,
-            vae=vae,
-            torch_dtype=torch.float16,
-            cache_dir="/workspace/models"
+        load_kwargs = {
+            "torch_dtype": torch.float16,
+            "local_files_only": True,
+        }
+        if vae_local:
+            vae = AutoencoderKL.from_pretrained(vae_local, torch_dtype=torch.float16, local_files_only=True)
+            load_kwargs["vae"] = vae
+        pipe = StableDiffusionXLInpaintPipeline.from_pretrained(
+            sdxl_local, **load_kwargs
         ).to("cuda")
         pipe.enable_model_cpu_offload()
-        PIPE_MODE = "sdxl_controlnet_depth"
-        print("SDXL + ControlNet Depth loaded")
+        PIPE_MODE = "sdxl_inpainting_local"
+        print("SDXL loaded from local snapshot")
     except Exception as e:
-        print(f"ControlNet depth pipeline failed ({e}), falling back to SDXL inpainting only")
-        USE_DEPTH = False
-
-if not USE_DEPTH:
-    print("Loading SDXL Inpainting (no ControlNet)...")
-    vae = AutoencoderKL.from_pretrained(
-        "madebyollin/sdxl-vae-fp16-fix",
+        print(f"Local SDXL load failed: {e}")
+        print("Falling back to SD v1.5 inpainting...")
+        from diffusers import StableDiffusionInpaintPipeline
+        sd_local = find_snapshot("runwayml/stable-diffusion-inpainting")
+        if sd_local:
+            pipe = StableDiffusionInpaintPipeline.from_pretrained(
+                sd_local, torch_dtype=torch.float16, local_files_only=True
+            ).to("cuda")
+        else:
+            pipe = StableDiffusionInpaintPipeline.from_pretrained(
+                "runwayml/stable-diffusion-inpainting",
+                torch_dtype=torch.float16,
+                cache_dir="/workspace/models"
+            ).to("cuda")
+        PIPE_MODE = "sd15_inpainting_fallback"
+        IMAGE_SIZE = 512
+        print(f"Fallback pipeline loaded: {PIPE_MODE}")
+else:
+    print("No local SDXL found, downloading SD v1.5 inpainting as fallback...")
+    from diffusers import StableDiffusionInpaintPipeline
+    sd_local = find_snapshot("runwayml/stable-diffusion-inpainting")
+    pipe = StableDiffusionInpaintPipeline.from_pretrained(
+        sd_local if sd_local else "runwayml/stable-diffusion-inpainting",
         torch_dtype=torch.float16,
-        cache_dir="/workspace/models"
-    )
-    pipe = StableDiffusionXLInpaintPipeline.from_pretrained(
-        "diffusers/stable-diffusion-xl-1.0-inpainting-0.1",
-        vae=vae,
-        torch_dtype=torch.float16,
+        local_files_only=bool(sd_local),
         cache_dir="/workspace/models"
     ).to("cuda")
-    pipe.enable_model_cpu_offload()
-    PIPE_MODE = "sdxl_inpainting"
-    print("SDXL Inpainting loaded")
-
-# Try loading IP-Adapter
-try:
-    pipe.load_ip_adapter(
-        "h94/IP-Adapter",
-        subfolder="sdxl_models",
-        weight_name="ip-adapter_sdxl.bin",
-        cache_dir="/workspace/models"
-    )
-    pipe.set_ip_adapter_scale(0.6)
-    USE_IP_ADAPTER = True
-    print("IP-Adapter loaded — reference image conditioning active")
-except Exception as e:
-    print(f"IP-Adapter not loaded ({e}) — proceeding without reference conditioning")
-    USE_IP_ADAPTER = False
+    PIPE_MODE = "sd15_inpainting_fallback"
+    IMAGE_SIZE = 512
+    print(f"Fallback pipeline loaded: {PIPE_MODE}")
 
 print(f"\nPipeline ready: {PIPE_MODE} | IP-Adapter: {USE_IP_ADAPTER} | Depth: {USE_DEPTH}")
 
