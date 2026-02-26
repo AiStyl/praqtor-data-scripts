@@ -1,0 +1,55 @@
+{
+  "script": "photoreal_scene_v3.py",
+  "version": "3.0",
+  "started_at": "2026-02-26T17:01:17.902409Z",
+  "config": {
+    "frames_per_env": 17,
+    "resolution": [
+      1280,
+      720
+    ],
+    "person_z_offset": 0.15
+  },
+  "environments_used": [
+    "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd",
+    "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd",
+    "/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd"
+  ],
+  "assets_used": {
+    "environments": [
+      "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd",
+      "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd",
+      "/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd"
+    ],
+    "characters": [
+      "/Isaac/People/Characters/original_male_adult_construction_03/male_adult_construction_03.usd",
+      "/Isaac/People/Characters/original_female_adult_police_01/female_adult_police_01.usd",
+      "/Isaac/People/Characters/original_male_adult_police_04/male_adult_police_04.usd",
+      "/Isaac/People/Characters/original_male_adult_medical_01/male_adult_medical_01.usd"
+    ],
+    "forklift": "/Isaac/Props/Forklift/forklift.usd",
+    "props": {
+      "cone": "/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd",
+      "pallet": "/Isaac/Environments/Simple_Warehouse/Props/SM_PaletteA_01.usd",
+      "box_d": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_04.usd",
+      "box_a": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxA_01.usd",
+      "box_b": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxB_01.usd",
+      "shelf": "/Isaac/Environments/Simple_Warehouse/Props/SM_RackShelf_01.usd"
+    }
+  },
+  "errors": [],
+  "tpose_fix_status": "failed_using_tpose",
+  "quality_check": "PASS_PHOTOREALISTIC",
+  "completed_at": "2026-02-26T17:06:29.327318Z",
+  "status": "COMPLETED",
+  "summary": {
+    "total_files": 309,
+    "total_size_mb": 68.0,
+    "rgb_count": 51,
+    "bbox_count": 153,
+    "seg_count": 51,
+    "avg_rgb_size_kb": 1283.3,
+    "environments_rendered": 3,
+    "errors_count": 0
+  }
+}
