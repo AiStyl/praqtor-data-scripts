@@ -1,0 +1,243 @@
+{
+  "info": {
+    "description": "PRAQTOR DATA Synthetic Warehouse Safety Dataset v2",
+    "version": "2.0",
+    "date_created": "2026-02-26T01:40:38.656767"
+  },
+  "images": [
+    {
+      "id": 1,
+      "file_name": "scenario_01_near_miss.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Near Miss \u2014 Forklift + Worker"
+    },
+    {
+      "id": 2,
+      "file_name": "scenario_02_pedestrian_crossing.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Pedestrian Crossing Active Lane"
+    },
+    {
+      "id": 3,
+      "file_name": "scenario_03_robot_human.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Robot + Human Mixed Operations"
+    },
+    {
+      "id": 4,
+      "file_name": "scenario_04_night_shift.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Night Shift Low Visibility"
+    },
+    {
+      "id": 5,
+      "file_name": "scenario_05_normal_operations.png",
+      "width": 512,
+      "height": 512,
+      "scenario": "Normal Operations \u2014 Baseline"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 2,
+      "bbox": [
+        126,
+        126,
+        80,
+        180
+      ],
+      "area": 14400,
+      "iscrowd": 0,
+      "confidence": 0.613,
+      "yolo_class": 0
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        54,
+        77,
+        421,
+        420
+      ],
+      "area": 176820,
+      "iscrowd": 0,
+      "confidence": 0.361,
+      "yolo_class": 7
+    },
+    {
+      "id": 3,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        116,
+        127,
+        130,
+        231
+      ],
+      "area": 30030,
+      "iscrowd": 0,
+      "confidence": 0.505,
+      "yolo_class": 0
+    },
+    {
+      "id": 4,
+      "image_id": 2,
+      "category_id": 1,
+      "bbox": [
+        69,
+        75,
+        225,
+        387
+      ],
+      "area": 87075,
+      "iscrowd": 0,
+      "confidence": 0.392,
+      "yolo_class": 7
+    },
+    {
+      "id": 5,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        117,
+        126,
+        99,
+        154
+      ],
+      "area": 15246,
+      "iscrowd": 0,
+      "confidence": 0.339,
+      "yolo_class": 0
+    },
+    {
+      "id": 6,
+      "image_id": 3,
+      "category_id": 2,
+      "bbox": [
+        123,
+        124,
+        91,
+        186
+      ],
+      "area": 16926,
+      "iscrowd": 0,
+      "confidence": 0.485,
+      "yolo_class": 0
+    },
+    {
+      "id": 7,
+      "image_id": 3,
+      "category_id": 2,
+      "bbox": [
+        123,
+        126,
+        117,
+        223
+      ],
+      "area": 26091,
+      "iscrowd": 0,
+      "confidence": 0.389,
+      "yolo_class": 0
+    },
+    {
+      "id": 8,
+      "image_id": 3,
+      "category_id": 1,
+      "bbox": [
+        43,
+        34,
+        467,
+        443
+      ],
+      "area": 206881,
+      "iscrowd": 0,
+      "confidence": 0.337,
+      "yolo_class": 7
+    },
+    {
+      "id": 9,
+      "image_id": 3,
+      "category_id": 3,
+      "bbox": [
+        9,
+        40,
+        501,
+        451
+      ],
+      "area": 225951,
+      "iscrowd": 0,
+      "confidence": 0.281,
+      "yolo_class": 6
+    },
+    {
+      "id": 10,
+      "image_id": 4,
+      "category_id": 2,
+      "bbox": [
+        125,
+        128,
+        112,
+        227
+      ],
+      "area": 25424,
+      "iscrowd": 0,
+      "confidence": 0.79,
+      "yolo_class": 0
+    },
+    {
+      "id": 11,
+      "image_id": 5,
+      "category_id": 2,
+      "bbox": [
+        121,
+        127,
+        116,
+        207
+      ],
+      "area": 24012,
+      "iscrowd": 0,
+      "confidence": 0.773,
+      "yolo_class": 0
+    },
+    {
+      "id": 12,
+      "image_id": 5,
+      "category_id": 1,
+      "bbox": [
+        70,
+        40,
+        228,
+        429
+      ],
+      "area": 97812,
+      "iscrowd": 0,
+      "confidence": 0.274,
+      "yolo_class": 5
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "forklift",
+      "supercategory": "vehicle"
+    },
+    {
+      "id": 2,
+      "name": "worker",
+      "supercategory": "person"
+    },
+    {
+      "id": 3,
+      "name": "robot",
+      "supercategory": "vehicle"
+    }
+  ]
+}

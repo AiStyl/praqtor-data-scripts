@@ -1,0 +1,10 @@
+{
+  "generated": "2026-02-26T01:40:49.106207",
+  "pipeline": "ControlNet Canny + SD v1.5 + YOLOv8n",
+  "version": "2.0",
+  "scenarios": 5,
+  "annotation_method": "YOLOv8n object detection",
+  "gpu": "RTX 4090",
+  "inference_steps": 25,
+  "guidance_scale": 8.0
+}
