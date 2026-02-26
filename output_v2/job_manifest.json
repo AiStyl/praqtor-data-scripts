@@ -1,0 +1,271 @@
+{
+  "script": "photoreal_scene_v2.py",
+  "version": "2.0",
+  "started_at": "2026-02-26T14:25:41.854936Z",
+  "assets_used": {
+    "warehouse": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/full_warehouse.usd",
+    "forklift": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Props/Forklift/forklift.usd",
+    "cone": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd",
+    "pallet": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/Props/SM_PaletteA_01.usd",
+    "box": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_04.usd",
+    "person": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/People/Characters/original_male_adult_construction_03/male_adult_construction_03.usd"
+  },
+  "output_files": [
+    {
+      "file": "/workspace/output_v2/rgb_0009.png",
+      "size_bytes": 1487547
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0008.png",
+      "size_bytes": 49764
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0008.png",
+      "size_bytes": 1551089
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0009.json",
+      "size_bytes": 916
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0009.png",
+      "size_bytes": 47913
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0009.json",
+      "size_bytes": 50719
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0009.json",
+      "size_bytes": 540
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0009.npy",
+      "size_bytes": 24328
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0008.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0008.json",
+      "size_bytes": 50514
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0008.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0008.npy",
+      "size_bytes": 24256
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0007.png",
+      "size_bytes": 49803
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0007.png",
+      "size_bytes": 1504096
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0006.png",
+      "size_bytes": 1460546
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0007.json",
+      "size_bytes": 964
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0007.json",
+      "size_bytes": 50243
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0007.json",
+      "size_bytes": 540
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0007.npy",
+      "size_bytes": 24088
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0005.png",
+      "size_bytes": 1433325
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0006.png",
+      "size_bytes": 49367
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0006.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0003.png",
+      "size_bytes": 1423457
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0006.json",
+      "size_bytes": 50578
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0006.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0006.npy",
+      "size_bytes": 24256
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0005.png",
+      "size_bytes": 47915
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0005.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0004.png",
+      "size_bytes": 1485700
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0005.json",
+      "size_bytes": 50815
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0005.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0005.npy",
+      "size_bytes": 24376
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0004.png",
+      "size_bytes": 47812
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0004.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0004.json",
+      "size_bytes": 50592
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0004.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0004.npy",
+      "size_bytes": 24280
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0003.png",
+      "size_bytes": 48571
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0002.png",
+      "size_bytes": 1451647
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0003.json",
+      "size_bytes": 964
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0001.png",
+      "size_bytes": 1454444
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0003.json",
+      "size_bytes": 50359
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0003.json",
+      "size_bytes": 540
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0003.npy",
+      "size_bytes": 24136
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0002.png",
+      "size_bytes": 47929
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0002.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/rgb_0000.png",
+      "size_bytes": 1375764
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0002.json",
+      "size_bytes": 50709
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0002.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0002.npy",
+      "size_bytes": 24328
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0001.png",
+      "size_bytes": 49783
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0001.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_0000.png",
+      "size_bytes": 48812
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0001.json",
+      "size_bytes": 50617
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0001.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0001.npy",
+      "size_bytes": 24280
+    },
+    {
+      "file": "/workspace/output_v2/semantic_segmentation_labels_0000.json",
+      "size_bytes": 1061
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_prim_paths_0000.json",
+      "size_bytes": 50807
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_labels_0000.json",
+      "size_bytes": 655
+    },
+    {
+      "file": "/workspace/output_v2/bounding_box_2d_tight_0000.npy",
+      "size_bytes": 24376
+    },
+    {
+      "file": "/workspace/output_v2/metadata.txt",
+      "size_bytes": 82
+    }
+  ],
+  "errors": [],
+  "quality_check": "PASS_PHOTOREALISTIC",
+  "completed_at": "2026-02-26T14:26:54.929642Z",
+  "status": "COMPLETED",
+  "summary": {
+    "total_files": 61,
+    "total_size_kb": 15508.3,
+    "rgb_count": 10,
+    "bbox_count": 30,
+    "seg_count": 20,
+    "avg_rgb_size_kb": 1428.5
+  }
+}

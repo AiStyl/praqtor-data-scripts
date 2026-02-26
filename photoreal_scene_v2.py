@@ -390,20 +390,12 @@ for i in range(25):
         print(f"    Warm-up frame {i}/25")
 
 print(f"  Starting capture ({NUM_FRAMES} frames)...")
-rep.orchestrator.run()
+rep.orchestrator.run_until_complete()
 
 # Wait for completion
-print("  Waiting for orchestrator to finish...")
+print("  Orchestrator running until complete...")
 timeout = 300  # 5 minute max
 start_time = time.time()
-while not rep.orchestrator.is_complete():
-    simulation_app.update()
-    time.sleep(0.5)
-    elapsed = time.time() - start_time
-    if elapsed > timeout:
-        print(f"  [ERROR] Orchestrator timed out after {timeout}s")
-        JOB_MANIFEST["errors"].append(f"Orchestrator timeout after {timeout}s")
-        break
 
 print("  Capture complete!")
 

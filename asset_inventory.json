@@ -1,0 +1,49 @@
+{
+  "script": "discover_assets_v2.py",
+  "version": "2.0",
+  "started_at": "2026-02-26T14:16:08.559104Z",
+  "purpose": "Asset discovery and inventory",
+  "assets_root": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2",
+  "strategy": "remote_s3_via_nucleus",
+  "completed_at": "2026-02-26T14:17:34.460486Z",
+  "remote_found": {
+    "WAREHOUSE_ENVIRONMENTS": [
+      "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd",
+      "/Isaac/Environments/Simple_Warehouse/warehouse.usd",
+      "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd",
+      "/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd",
+      "/Isaac/Environments/Hospital/hospital.usd",
+      "/Isaac/Environments/Office/office.usd"
+    ],
+    "VEHICLES_AND_ROBOTS": [
+      "/Isaac/Props/Forklift/forklift.usd",
+      "/Isaac/Robots/Carter/carter_v1.usd",
+      "/Isaac/Robots/Jetbot/jetbot.usd"
+    ],
+    "WAREHOUSE_PROPS": [
+      "/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd",
+      "/Isaac/Environments/Simple_Warehouse/Props/SM_PaletteA_01.usd",
+      "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_04.usd",
+      "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxA_01.usd",
+      "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxB_01.usd",
+      "/Isaac/Environments/Simple_Warehouse/Props/SM_RackShelf_01.usd"
+    ],
+    "PEOPLE": [
+      "/Isaac/People/Characters/original_male_adult_construction_03/male_adult_construction_03.usd",
+      "/Isaac/People/Characters/original_female_adult_police_01/female_adult_police_01.usd",
+      "/Isaac/People/Characters/original_male_adult_police_04/male_adult_police_04.usd",
+      "/Isaac/People/Characters/original_male_adult_medical_01/male_adult_medical_01.usd"
+    ]
+  },
+  "direct_s3_found": [
+    "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd",
+    "/Isaac/Props/Forklift/forklift.usd",
+    "/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd"
+  ],
+  "local_usd_count": 3,
+  "local_usd_top10": [
+    "/isaac-sim/standalone_examples/testing/omni.isaac.core/data/orientation_bug.usd",
+    "/isaac-sim/exts/omni.isaac.sensor/data/tests/nested_semantics.usd",
+    "/isaac-sim/exts/omni.isaac.sensor/data/tests/test_rename_node_type.usda"
+  ]
+}
