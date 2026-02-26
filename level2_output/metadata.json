@@ -1,0 +1,9 @@
+{
+  "generated": "2026-02-26T02:16:33.592456",
+  "pipeline": "SD Inpainting + mask placement",
+  "version": "3.0 \u2014 Level 2",
+  "annotation_method": "mask-derived (perfect labels)",
+  "scenarios": 5,
+  "gpu": "RTX 4090",
+  "key_advance": "Object placement is controlled by mask region. BBox = mask coords. Zero annotation uncertainty."
+}

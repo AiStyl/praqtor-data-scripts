@@ -1,0 +1,164 @@
+{
+  "info": {
+    "description": "PRAQTOR DATA Level 2 \u2014 Placement-Controlled Synthetic Dataset",
+    "version": "2.0",
+    "date_created": "2026-02-26T02:16:27.210501",
+    "pipeline": "SD Inpainting + Mask-based placement"
+  },
+  "images": [
+    {
+      "id": 1,
+      "file_name": "scenario_01_forklift_left_aisle.png",
+      "width": 512,
+      "height": 512,
+      "placement": "Forklift \u2014 Left Aisle Position",
+      "mask_region": [
+        0,
+        150,
+        220,
+        450
+      ]
+    },
+    {
+      "id": 2,
+      "file_name": "scenario_02_forklift_center.png",
+      "width": 512,
+      "height": 512,
+      "placement": "Forklift \u2014 Center Aisle",
+      "mask_region": [
+        140,
+        100,
+        370,
+        480
+      ]
+    },
+    {
+      "id": 3,
+      "file_name": "scenario_03_worker_crossing.png",
+      "width": 512,
+      "height": 512,
+      "placement": "Worker \u2014 Crossing Foreground",
+      "mask_region": [
+        30,
+        200,
+        200,
+        480
+      ]
+    },
+    {
+      "id": 4,
+      "file_name": "scenario_04_two_forklifts.png",
+      "width": 512,
+      "height": 512,
+      "placement": "Two Forklifts \u2014 Both Aisles",
+      "mask_region": [
+        0,
+        80,
+        512,
+        460
+      ]
+    },
+    {
+      "id": 5,
+      "file_name": "scenario_05_forklift_right_near_miss.png",
+      "width": 512,
+      "height": 512,
+      "placement": "Near Miss \u2014 Right Side",
+      "mask_region": [
+        280,
+        120,
+        512,
+        480
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        0,
+        150,
+        220,
+        300
+      ],
+      "area": 66000,
+      "iscrowd": 0,
+      "source": "mask_placement"
+    },
+    {
+      "id": 2,
+      "image_id": 2,
+      "category_id": 1,
+      "bbox": [
+        140,
+        100,
+        230,
+        380
+      ],
+      "area": 87400,
+      "iscrowd": 0,
+      "source": "mask_placement"
+    },
+    {
+      "id": 3,
+      "image_id": 3,
+      "category_id": 2,
+      "bbox": [
+        30,
+        200,
+        170,
+        280
+      ],
+      "area": 47600,
+      "iscrowd": 0,
+      "source": "mask_placement"
+    },
+    {
+      "id": 4,
+      "image_id": 4,
+      "category_id": 1,
+      "bbox": [
+        0,
+        80,
+        512,
+        380
+      ],
+      "area": 194560,
+      "iscrowd": 0,
+      "source": "mask_placement"
+    },
+    {
+      "id": 5,
+      "image_id": 5,
+      "category_id": 1,
+      "bbox": [
+        280,
+        120,
+        232,
+        360
+      ],
+      "area": 83520,
+      "iscrowd": 0,
+      "source": "mask_placement"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "forklift",
+      "supercategory": "vehicle"
+    },
+    {
+      "id": 2,
+      "name": "worker",
+      "supercategory": "person"
+    },
+    {
+      "id": 3,
+      "name": "robot",
+      "supercategory": "vehicle"
+    }
+  ]
+}
