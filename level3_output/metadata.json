@@ -1,0 +1,18 @@
+{
+  "generated": "2026-02-26T03:47:06.766431",
+  "pipeline": "sdxl_inpainting_local",
+  "version": "3.0 \u2014 Level 3",
+  "image_size": "1024x1024",
+  "annotation_method": "mask-derived (perfect labels)",
+  "depth_aware_placement": false,
+  "ip_adapter_conditioning": false,
+  "scenarios": 5,
+  "gpu": "RTX 4090",
+  "key_advances": [
+    "SDXL at 1024x1024 \u2014 4x resolution vs SD v1.5",
+    "Depth map conditioning \u2014 perspective-correct object scale",
+    "IP-Adapter reference scene \u2014 visual style consistency",
+    "Feathered mask edges \u2014 seamless blending",
+    "Perfect COCO labels from mask coordinates"
+  ]
+}

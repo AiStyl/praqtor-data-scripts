@@ -1,0 +1,142 @@
+{
+  "info": {
+    "description": "PRAQTOR DATA Level 3 \u2014 SDXL Depth-Aware Placement Dataset",
+    "version": "3.0",
+    "date_created": "2026-02-26T03:46:29.144952",
+    "pipeline": "sdxl_inpainting_local",
+    "image_size": 1024,
+    "ip_adapter": false,
+    "depth_control": false
+  },
+  "images": [
+    {
+      "id": 1,
+      "file_name": "scenario_01_forklift_foreground.png",
+      "width": 1024,
+      "height": 1024,
+      "scenario": "Forklift \u2014 Foreground (large, correct scale)"
+    },
+    {
+      "id": 2,
+      "file_name": "scenario_02_forklift_midground.png",
+      "width": 1024,
+      "height": 1024,
+      "scenario": "Forklift \u2014 Midground (medium scale, perspective correct)"
+    },
+    {
+      "id": 3,
+      "file_name": "scenario_03_worker_foreground_crossing.png",
+      "width": 1024,
+      "height": 1024,
+      "scenario": "Worker \u2014 Crossing Foreground (near camera)"
+    },
+    {
+      "id": 4,
+      "file_name": "scenario_04_near_miss_two_forklifts.png",
+      "width": 1024,
+      "height": 1024,
+      "scenario": "Near Miss \u2014 Two Forklifts Different Depths"
+    },
+    {
+      "id": 5,
+      "file_name": "scenario_05_pedestrian_aisle_hazard.png",
+      "width": 1024,
+      "height": 1024,
+      "scenario": "Pedestrian in Forklift Aisle \u2014 Hazard Zone"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        50,
+        500,
+        450,
+        480
+      ],
+      "area": 216000,
+      "iscrowd": 0,
+      "source": "mask_placement",
+      "depth_aware": false
+    },
+    {
+      "id": 2,
+      "image_id": 2,
+      "category_id": 1,
+      "bbox": [
+        200,
+        300,
+        500,
+        450
+      ],
+      "area": 225000,
+      "iscrowd": 0,
+      "source": "mask_placement",
+      "depth_aware": false
+    },
+    {
+      "id": 3,
+      "image_id": 3,
+      "category_id": 2,
+      "bbox": [
+        0,
+        400,
+        350,
+        600
+      ],
+      "area": 210000,
+      "iscrowd": 0,
+      "source": "mask_placement",
+      "depth_aware": false
+    },
+    {
+      "id": 4,
+      "image_id": 4,
+      "category_id": 1,
+      "bbox": [
+        0,
+        200,
+        1024,
+        700
+      ],
+      "area": 716800,
+      "iscrowd": 0,
+      "source": "mask_placement",
+      "depth_aware": false
+    },
+    {
+      "id": 5,
+      "image_id": 5,
+      "category_id": 2,
+      "bbox": [
+        300,
+        300,
+        450,
+        600
+      ],
+      "area": 270000,
+      "iscrowd": 0,
+      "source": "mask_placement",
+      "depth_aware": false
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "forklift",
+      "supercategory": "vehicle"
+    },
+    {
+      "id": 2,
+      "name": "worker",
+      "supercategory": "person"
+    },
+    {
+      "id": 3,
+      "name": "robot",
+      "supercategory": "vehicle"
+    }
+  ]
+}
