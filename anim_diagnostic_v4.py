@@ -1,368 +1,162 @@
+"""PRAQTOR DATΔ — Animation Diagnostic v4
+Requires: Isaac Sim 4.2 container on RunPod RTX 4090
 """
-PRAQTOR DATΔ — Animation Diagnostic v4
-Quick test to verify T-pose fix works BEFORE running full render.
-Run time: ~2 minutes. Cost: ~$0.03
+import os, sys, json, time
 
-Tests:
-1. Can we enable omni.anim.graph.core?
-2. Can we load a character and find its Skeleton prim?
-3. Can we load an animation clip?
-4. Can we bind the animation to the skeleton?
-5. Does the character pose change after timeline advance?
-"""
+print("[DIAG v4] Starting Isaac Sim runtime...")
+from omni.isaac.kit import SimulationApp
+simulation_app = SimulationApp({"headless": True})
+print("[DIAG v4] Runtime started.")
 
-import os
-import sys
-import json
-import time
-
-print("[DIAG v4] PRAQTOR DATΔ Animation Diagnostic")
-print(f"[DIAG v4] Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-print(f"[DIAG v4] Python: {sys.version}")
-
-results = {
-    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-    "tests": {},
-    "isaac_sim_version": "unknown",
-    "anim_extensions": {},
-    "character_hierarchy": [],
-    "skeleton_found": False,
-    "animation_bound": False,
-    "recommendations": [],
-}
+import omni.kit.app
+import omni.usd
+import omni.timeline
+from pxr import Usd, UsdGeom, UsdSkel, Sdf, Gf
 
 S3_BASE = "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2"
+app = omni.kit.app.get_app()
+results = {"timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"), "tests": {}, "anim_extensions": {}}
 
-# ============================================================
 # TEST 1: Enable animation extensions
-# ============================================================
 print("\n[TEST 1] Enabling animation extensions...")
+ext_manager = app.get_extension_manager()
+for ext_name in ["omni.anim.graph.core","omni.anim.graph.schema","omni.anim.navigation.schema","omni.anim.skelJoint","omni.anim.retarget.core"]:
+    try:
+        r = ext_manager.set_extension_enabled_immediate(ext_name, True)
+        results["anim_extensions"][ext_name] = True
+        print(f"  [OK] {ext_name}")
+    except Exception as e:
+        results["anim_extensions"][ext_name] = False
+        print(f"  [WARN] {ext_name}: {e}")
+for _ in range(20): app.update()
+results["tests"]["extensions"] = True
+print("[TEST 1] PASSED")
 
-try:
-    import omni.kit.app
-    app = omni.kit.app.get_app()
-    ext_manager = app.get_extension_manager()
-    
-    ANIM_EXTENSIONS = [
-        "omni.anim.graph.core",
-        "omni.anim.graph.schema",
-        "omni.anim.navigation.schema",
-        "omni.anim.skelJoint",
-        "omni.anim.retarget.core",
-        "omni.anim.people",
-    ]
-    
-    for ext_name in ANIM_EXTENSIONS:
+# TEST 2: Load character, find skeleton
+print("\n[TEST 2] Loading character...")
+omni.usd.get_context().new_stage()
+stage = omni.usd.get_context().get_stage()
+for _ in range(10): app.update()
+
+char_url = f"{S3_BASE}/Isaac/People/Characters/male_adult_construction_03/male_adult_construction_03.usd"
+char_prim = stage.DefinePrim("/World/TestChar", "Xform")
+char_prim.GetReferences().AddReference(char_url)
+print(f"  Loading from S3...")
+for _ in range(60): app.update()
+
+skeleton_path = None
+skelroot_path = None
+print(f"\n  Hierarchy under /World/TestChar:")
+for prim in Usd.PrimRange(stage.GetPrimAtPath("/World/TestChar")):
+    depth = str(prim.GetPath()).count("/") - 2
+    if depth > 6: continue
+    marker = ""
+    if prim.IsA(UsdSkel.Skeleton):
+        marker = " <<< SKELETON"
+        skeleton_path = str(prim.GetPath())
+    if prim.IsA(UsdSkel.Root):
+        marker = " <<< SKELROOT"
+        skelroot_path = str(prim.GetPath())
+    print(f"    {'  '*depth}{prim.GetName()} [{prim.GetTypeName()}]{marker}")
+
+results["skeleton_path"] = skeleton_path
+results["skelroot_path"] = skelroot_path
+results["tests"]["load_char"] = skeleton_path is not None or skelroot_path is not None
+print(f"\n  Skeleton: {skeleton_path or 'NOT FOUND'}")
+print(f"  SkelRoot: {skelroot_path or 'NOT FOUND'}")
+print(f"[TEST 2] {'PASSED' if skeleton_path or skelroot_path else 'FAILED'}")
+
+# TEST 3: Bind animation
+print("\n[TEST 3] Binding animation clip...")
+bound = False
+ANIMS = [
+    f"{S3_BASE}/Isaac/People/Characters/Animations/walking_01.skelanim.usd",
+    f"{S3_BASE}/Isaac/People/Characters/Animations/idle_01.skelanim.usd",
+    f"{S3_BASE}/Isaac/People/Animations/walking_01.skelanim.usd",
+    f"{S3_BASE}/Isaac/People/Animations/idle_01.skelanim.usd",
+]
+
+target_path = skeleton_path or skelroot_path
+if target_path:
+    for anim_url in ANIMS:
         try:
-            enabled = ext_manager.set_extension_enabled_immediate(ext_name, True)
-            results["anim_extensions"][ext_name] = {"enabled": True, "result": str(enabled)}
-            print(f"  [OK] {ext_name}: {enabled}")
+            aname = os.path.basename(anim_url).replace('.usd','')
+            aprim_path = f"/World/Anim_{aname}"
+            aprim = stage.DefinePrim(aprim_path, "SkelAnimation")
+            aprim.GetReferences().AddReference(anim_url)
+            for _ in range(20): app.update()
+
+            target_prim = stage.GetPrimAtPath(target_path)
+            binding = UsdSkel.BindingAPI.Apply(target_prim)
+            binding.CreateAnimationSourceRel().SetTargets([Sdf.Path(aprim_path)])
+            print(f"  [OK] Bound {aname} to {target_path}")
+            results["working_animation"] = anim_url
+            bound = True
+            break
         except Exception as e:
-            results["anim_extensions"][ext_name] = {"enabled": False, "error": str(e)}
-            print(f"  [FAIL] {ext_name}: {e}")
-    
-    # Update app after enabling extensions
-    for _ in range(20):
-        app.update()
-    
-    results["tests"]["enable_extensions"] = True
-    print("[TEST 1] PASSED")
-except Exception as e:
-    results["tests"]["enable_extensions"] = False
-    results["recommendations"].append(f"Extension loading failed: {e}")
-    print(f"[TEST 1] FAILED: {e}")
+            print(f"  [SKIP] {aname}: {e}")
+else:
+    print("  [SKIP] No skeleton/skelroot to bind to")
 
-# ============================================================
-# TEST 2: Load a character and inspect hierarchy
-# ============================================================
-print("\n[TEST 2] Loading character and inspecting hierarchy...")
+results["animation_bound"] = bound
+results["tests"]["bind_anim"] = bound
+print(f"[TEST 3] {'PASSED' if bound else 'NEEDS INVESTIGATION'}")
 
+# TEST 4: Timeline advance
+print("\n[TEST 4] Advancing timeline...")
 try:
-    import omni.usd
-    from pxr import Usd, UsdGeom, UsdSkel, Sdf, Gf
-    
-    # Open a fresh stage
-    omni.usd.get_context().new_stage()
-    stage = omni.usd.get_context().get_stage()
-    
-    # Give stage time to initialize
-    for _ in range(10):
-        app.update()
-    
-    # Add a ground plane for reference
-    UsdGeom.Mesh.Define(stage, "/World/Ground")
-    
-    # Load a character
-    char_url = f"{S3_BASE}/Isaac/People/Characters/male_adult_construction_03/male_adult_construction_03.usd"
-    char_prim = stage.DefinePrim("/World/TestCharacter", "Xform")
-    char_prim.GetReferences().AddReference(char_url)
-    
-    print(f"  [OK] Character reference added: {char_url}")
-    
-    # Force load
-    for _ in range(30):
-        app.update()
-    
-    # Inspect hierarchy
-    print(f"\n  Character hierarchy under /World/TestCharacter:")
-    skeleton_path = None
-    skelroot_path = None
-    
-    for prim in Usd.PrimRange(stage.GetPrimAtPath("/World/TestCharacter")):
-        depth = str(prim.GetPath()).count("/") - 2
-        indent = "  " * depth
-        prim_type = prim.GetTypeName()
-        is_skel = prim.IsA(UsdSkel.Skeleton)
-        is_skelroot = prim.IsA(UsdSkel.Root)
-        
-        marker = ""
-        if is_skel:
-            marker = " ◀ SKELETON"
-            skeleton_path = str(prim.GetPath())
-        if is_skelroot:
-            marker = " ◀ SKELROOT"
-            skelroot_path = str(prim.GetPath())
-        
-        entry = f"{indent}{prim.GetName()} [{prim_type}]{marker}"
-        print(f"    {entry}")
-        results["character_hierarchy"].append(entry.strip())
-        
-        # Only go 5 levels deep to avoid flooding
-        if depth > 5:
-            continue
-    
-    results["skeleton_found"] = skeleton_path is not None
-    results["skelroot_path"] = skelroot_path
-    results["skeleton_path"] = skeleton_path
-    
-    if skeleton_path:
-        print(f"\n  [OK] Skeleton found at: {skeleton_path}")
-        
-        # Inspect skeleton details
-        skel_prim = stage.GetPrimAtPath(skeleton_path)
-        skel = UsdSkel.Skeleton(skel_prim)
-        
-        # Check for existing animation source
-        binding = UsdSkel.BindingAPI(skel_prim)
-        if binding:
-            anim_source = binding.GetAnimationSourceRel()
-            if anim_source:
-                targets = anim_source.GetTargets()
-                print(f"  [INFO] Existing animation source: {targets}")
-                results["existing_animation"] = [str(t) for t in targets]
-            else:
-                print(f"  [INFO] No existing animation source")
-                results["existing_animation"] = None
-        
-        # Check joints
-        joints_attr = skel.GetJointsAttr()
-        if joints_attr:
-            joints = joints_attr.Get()
-            if joints:
-                print(f"  [INFO] Skeleton has {len(joints)} joints")
-                results["joint_count"] = len(joints)
-                # Print first few joints
-                for j in list(joints)[:5]:
-                    print(f"    - {j}")
-                if len(joints) > 5:
-                    print(f"    ... and {len(joints) - 5} more")
-    else:
-        print(f"\n  [WARN] No Skeleton prim found!")
-        if skelroot_path:
-            print(f"  [INFO] SkelRoot found at: {skelroot_path}")
-        results["recommendations"].append("No Skeleton prim found in character. Try a different character model.")
-    
-    results["tests"]["load_character"] = True
-    print("[TEST 2] PASSED")
-    
-except Exception as e:
-    results["tests"]["load_character"] = False
-    results["recommendations"].append(f"Character loading failed: {e}")
-    print(f"[TEST 2] FAILED: {e}")
-    import traceback
-    traceback.print_exc()
-
-# ============================================================
-# TEST 3: Load animation clip and bind to skeleton
-# ============================================================
-print("\n[TEST 3] Loading animation clip and binding...")
-
-try:
-    if skeleton_path:
-        # Try multiple animation paths
-        ANIM_CANDIDATES = [
-            f"{S3_BASE}/Isaac/People/Characters/Animations/walking_01.skelanim.usd",
-            f"{S3_BASE}/Isaac/People/Characters/Animations/idle_01.skelanim.usd",
-            f"{S3_BASE}/Isaac/People/Characters/Animations/standing_01.skelanim.usd",
-            # Alternative path patterns
-            f"{S3_BASE}/Isaac/People/Animations/walking_01.skelanim.usd",
-            f"{S3_BASE}/Isaac/People/Animations/idle_01.skelanim.usd",
-        ]
-        
-        bound = False
-        for anim_url in ANIM_CANDIDATES:
-            try:
-                anim_name = os.path.basename(anim_url).replace('.usd', '')
-                anim_prim_path = f"/World/TestCharacter/Anim_{anim_name}"
-                
-                # Create animation prim with reference
-                anim_prim = stage.DefinePrim(anim_prim_path, "SkelAnimation")
-                anim_prim.GetReferences().AddReference(anim_url)
-                
-                # Update to load
-                for _ in range(15):
-                    app.update()
-                
-                # Check if prim loaded successfully
-                if anim_prim.IsValid() and anim_prim.GetChildren():
-                    print(f"  [OK] Animation loaded: {anim_name}")
-                else:
-                    # Check if it has any attributes (skelanim might not have children)
-                    print(f"  [INFO] Animation prim created: {anim_name} (checking attributes...)")
-                
-                # Bind to skeleton
-                skel_prim = stage.GetPrimAtPath(skeleton_path)
-                binding = UsdSkel.BindingAPI.Apply(skel_prim)
-                binding.CreateAnimationSourceRel().SetTargets([Sdf.Path(anim_prim_path)])
-                
-                # Also try binding to SkelRoot if available
-                if skelroot_path:
-                    skelroot_prim = stage.GetPrimAtPath(skelroot_path)
-                    root_binding = UsdSkel.BindingAPI.Apply(skelroot_prim)
-                    root_binding.CreateAnimationSourceRel().SetTargets([Sdf.Path(anim_prim_path)])
-                
-                print(f"  [OK] Animation bound to skeleton")
-                results["animation_bound"] = True
-                results["working_animation"] = anim_url
-                bound = True
-                break
-                
-            except Exception as e:
-                print(f"  [SKIP] {anim_name}: {e}")
-                continue
-        
-        if not bound:
-            print(f"  [WARN] No animations could be bound")
-            results["recommendations"].append("No animation clips loaded. Check S3 paths.")
-    else:
-        print(f"  [SKIP] No skeleton to bind to")
-    
-    results["tests"]["bind_animation"] = bound if skeleton_path else False
-    print(f"[TEST 3] {'PASSED' if bound else 'NEEDS INVESTIGATION'}")
-    
-except Exception as e:
-    results["tests"]["bind_animation"] = False
-    print(f"[TEST 3] FAILED: {e}")
-    import traceback
-    traceback.print_exc()
-
-# ============================================================
-# TEST 4: Advance timeline and check pose
-# ============================================================
-print("\n[TEST 4] Advancing timeline to apply animation...")
-
-try:
-    import omni.timeline
     timeline = omni.timeline.get_timeline_interface()
-    
-    # Record pre-animation state
-    print(f"  [INFO] Starting timeline play...")
     timeline.play()
-    
     for i in range(60):
         app.update()
-        if i % 20 == 0:
-            print(f"  [INFO] Frame {i}/60...")
-    
+        if i % 20 == 0: print(f"  Frame {i}/60...")
     timeline.pause()
-    print(f"  [OK] Timeline advanced 60 frames")
-    
-    # Check if skeleton transform changed
-    if skeleton_path:
-        skel_prim = stage.GetPrimAtPath(skeleton_path)
-        xform = UsdGeom.Xformable(skel_prim)
-        if xform:
-            local_transform = xform.ComputeLocalToWorldTransform(Usd.TimeCode.Default())
-            print(f"  [INFO] Skeleton transform: {local_transform}")
-    
-    results["tests"]["timeline_advance"] = True
+    results["tests"]["timeline"] = True
     print("[TEST 4] PASSED")
-    
 except Exception as e:
-    results["tests"]["timeline_advance"] = False
+    results["tests"]["timeline"] = False
     print(f"[TEST 4] FAILED: {e}")
 
-# ============================================================
-# TEST 5: Quick render test
-# ============================================================
-print("\n[TEST 5] Quick single-frame render...")
-
+# TEST 5: Quick render
+print("\n[TEST 5] Quick render test...")
 try:
     import omni.replicator.core as rep
-    
-    with rep.new_layer():
-        camera = rep.create.camera(
-            position=(3, 2, 3),
-            look_at=(0, 1, 0),
-        )
-        rp = rep.create.render_product(camera, (640, 480))
-        
-        writer = rep.WriterRegistry.get("BasicWriter")
-        test_output = "/workspace/output_v4_diag"
-        writer.initialize(output_dir=test_output, rgb=True)
-        writer.attach([rp])
-        
-        rep.orchestrator.run()
-        
-        for _ in range(30):
-            app.update()
-    
-    # Check output
-    rgb_files = [f for f in os.listdir(test_output) if f.startswith("rgb_")] if os.path.exists(test_output) else []
-    if rgb_files:
-        size = os.path.getsize(os.path.join(test_output, rgb_files[0])) / 1024
-        print(f"  [OK] Rendered {len(rgb_files)} frame(s), size: {size:.1f} KB")
-        results["test_render_size_kb"] = round(size, 1)
+    camera = rep.create.camera(position=(3,2,3), look_at=(0,1,0))
+    rp = rep.create.render_product(camera, (640,480))
+    writer = rep.WriterRegistry.get("BasicWriter")
+    writer.initialize(output_dir="/workspace/output_v4_diag", rgb=True, semantic_segmentation=True)
+    writer.attach([rp])
+    rep.orchestrator.run()
+    for _ in range(50): app.update()
+
+    test_dir = "/workspace/output_v4_diag"
+    rgbs = [f for f in os.listdir(test_dir) if f.startswith("rgb_")] if os.path.exists(test_dir) else []
+    if rgbs:
+        sz = os.path.getsize(os.path.join(test_dir, rgbs[0]))/1024
+        print(f"  [OK] {len(rgbs)} frame(s), {sz:.1f} KB")
+        results["test_render_kb"] = round(sz,1)
         results["tests"]["render"] = True
     else:
-        print(f"  [WARN] No RGB output found")
         results["tests"]["render"] = False
-        
-    print(f"[TEST 5] {'PASSED' if rgb_files else 'FAILED'}")
-    
+        print("  [WARN] No output")
+    print(f"[TEST 5] {'PASSED' if rgbs else 'FAILED'}")
 except Exception as e:
     results["tests"]["render"] = False
     print(f"[TEST 5] FAILED: {e}")
-    import traceback
-    traceback.print_exc()
 
-# ============================================================
 # SUMMARY
-# ============================================================
-print(f"\n{'='*60}")
-print("[DIAG v4] SUMMARY")
-print(f"{'='*60}")
-
+print(f"\n{'='*50}")
 passed = sum(1 for v in results["tests"].values() if v)
 total = len(results["tests"])
-print(f"  Tests passed: {passed}/{total}")
-print(f"  Skeleton found: {results['skeleton_found']}")
-print(f"  Animation bound: {results['animation_bound']}")
-
-if results["recommendations"]:
-    print(f"\n  RECOMMENDATIONS:")
-    for rec in results["recommendations"]:
-        print(f"    → {rec}")
-
-if results["animation_bound"]:
-    print(f"\n  ✅ T-POSE FIX LIKELY TO WORK — proceed with photoreal_scene_v4.py")
+print(f"[DIAG v4] {passed}/{total} tests passed")
+print(f"  Skeleton: {skeleton_path or 'NOT FOUND'}")
+print(f"  Animation bound: {bound}")
+if bound:
+    print(f"\n  >>> T-POSE FIX READY — run photoreal_scene_v4.py next")
 else:
-    print(f"\n  ⚠️ ANIMATION BINDING UNCLEAR — check results before running full render")
-    print(f"  The diagnostic render at /workspace/output_v4_diag/ will show if the pose changed.")
+    print(f"\n  >>> Check output_v4_diag/ to see if character pose changed")
+print(f"{'='*50}")
 
-# Save results
-diag_path = "/workspace/diagnostic_v4.json"
-with open(diag_path, "w") as f:
-    json.dump(results, f, indent=2)
-print(f"\n  Full results: {diag_path}")
-print(f"[DIAG v4] Done!")
+with open("/workspace/diagnostic_v4.json","w") as f: json.dump(results,f,indent=2)
+print(f"Results: /workspace/diagnostic_v4.json")
+simulation_app.close()
